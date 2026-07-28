@@ -100,17 +100,86 @@ Where:
 
 ```python
 
+import gymnasium as gym
+import numpy as np
 
-# -------------------------------------------------
-# Policy Evaluation Function
-# -------------------------------------------------
+# Create FrozenLake environment
+env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
 
+# Access the unwrapped environment to use the transition model
+env = env.unwrapped
 
-# -------------------------------------------------
-# Display Output
-# -------------------------------------------------
+# Number of states and actions
+n_states = env.observation_space.n
+n_actions = env.action_space.n
 
-# Change the parameters and observe the results
+# Parameters
+gamma = 0.99
+theta = 1e-8
+
+# Random policy: each action has equal probability
+policy = np.ones((n_states, n_actions)) / n_actions
+
+def policy_evaluation(env, policy, gamma=0.99, theta=1e-8):
+    """
+    Performs iterative policy evaluation using the Bellman expectation equation.
+
+    Returns:
+        V : Estimated state-value function
+        iteration : Number of iterations used for convergence
+    """
+
+    # Initialize value function
+    V = np.zeros(env.observation_space.n)
+
+    iteration = 0
+
+    while True:
+        delta = 0
+
+        # Update every state
+        for s in range(env.observation_space.n):
+
+            v = 0
+
+            # Iterate over all actions
+            for a, action_prob in enumerate(policy[s]):
+
+                # Transition probabilities
+                for prob, next_state, reward, done in env.P[s][a]:
+
+                    v += action_prob * prob * (
+                        reward + gamma * V[next_state] * (not done)
+                    )
+
+            delta = max(delta, abs(V[s] - v))
+            V[s] = v
+
+        iteration += 1
+
+        # Stop when converged
+        if delta < theta:
+            break
+
+    return V, iteration
+
+# Run policy evaluation
+V, iterations = policy_evaluation(env, policy, gamma, theta)
+np.set_printoptions(precision=4, suppress=True, floatmode='fixed')
+
+print("Name: MOHAMED AAKIF ASRAR S")
+print("Register Number: 212223240088")
+print("Number of iterations:", iterations)
+print("\nState-Value Function:")
+print(V)
+
+print("\n\nName: MOHAMED AAKIF ASRAR S")
+print("Register Number: 212223240088")
+print("\nState-Value Function as 4x4 Grid:")
+print(np.round(V.reshape(4, 4), 4))
+
+env.close()
+     
 
 ```
 
@@ -118,15 +187,9 @@ Where:
 
 ## Output
 
-```text
 
-Number of Iterations: 
+<img width="550" height="290" alt="image" src="https://github.com/user-attachments/assets/83e84ee4-c3f3-4433-aca1-4c3fcd8beb07" />
 
-State-Value Function as 4x4 Grid:
-
-
-
-```
 ---
 
 ## Result
@@ -137,12 +200,8 @@ Iterative policy evaluation was implemented successfully using the Gymnasium Fro
 
 ## Inference
 
-```text
 
-
-
-```
-
+The experiment demonstrates that iterative policy evaluation computes the expected return for each state under a fixed random policy. States closer to the goal have higher values, while hole and terminal states have zero value, confirming the correctness of the Bellman expectation update.
 
 
 
